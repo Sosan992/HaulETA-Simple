@@ -1,4 +1,4 @@
-# HaulETA Simple
+# HaulETA Simple(BETA)
 
 **A lightweight telemetry overlay plugin for Euro Truck Simulator 2 and American Truck Simulator.**
 
