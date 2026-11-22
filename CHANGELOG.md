@@ -1,5 +1,10 @@
 # HaulETA Simple changelog
 
+## 1.7
+
+- English is now the default language: a new install (no language saved in settings.ini yet) starts in English, and English is the first entry of the language drop-down. A language chosen earlier in Ctrl+F12 is kept.
+- An unknown language code in settings.ini also falls back to English.
+
 ## 1.6
 
 - Languages: a new "Nyelv / Language" drop-down in the Ctrl+F12 settings window. Besides Hungarian, the plugin is translated into the five languages most used by ETS2 players according to Steam review languages: English, Russian (Русский), Turkish (Türkçe), German (Deutsch) and Polish (Polski).

@@ -2,6 +2,8 @@
 
 **A lightweight telemetry overlay plugin for Euro Truck Simulator 2 and American Truck Simulator.**
 
+**Version 0.1.7** · see [CHANGELOG.md](CHANGELOG.md) (GitHub version 0.1.*x* = plugin build 1.*x*; the plugin shows "HaulETA Simple 1.7")
+
 HaulETA Simple shows the information you need on the road in one compact, modern panel: when you will arrive, how far you have come, the speed limit, your fuel, when you need to rest, the local time and the G-forces your cargo (or your passengers) feel. It reacts to your headlights and indicators with a back-lit edge glow, comes with a dark and a light theme, lets you pull parts of the panel out as separate elements, and speaks six languages.
 
 > Built with **Claude (Anthropic)** — the plugin's code, design, textures pipeline and documentation were created in a collaboration with Claude.
@@ -24,7 +26,7 @@ HaulETA Simple shows the information you need on the road in one compact, modern
 | **Indicator glow** | The left or right side of the panel pulses amber in step with your blinker (both sides for hazard lights). |
 | **Themes** | *Dark (carbon)*: carbon fibre and brushed metal. *Light*: white paper card with soft shadow, violet accents and a black clock pill. |
 | **Detachable elements** | Show the G-meter and/or a route card (from → to, company names, time left) as separate panels anywhere on screen; the main panel gets shorter. |
-| **Languages** | Magyar, English, Русский, Türkçe, Deutsch, Polski. |
+| **Languages** | English (default), Magyar, Русский, Türkçe, Deutsch, Polski. |
 | **Smooth & light** | Anti-aliased drawing with per-pixel transparency, animations only while something changes. |
 
 ## Requirements
@@ -57,7 +59,7 @@ The panel appears when you start driving and hides while the game is paused or m
 
 - **Transparency** of all panels
 - **Background** – Dark (carbon) or Light
-- **Language** – Magyar, English, Русский, Türkçe, Deutsch, Polski
+- **Language** – English, Magyar, Русский, Türkçe, Deutsch, Polski (a new install starts in English)
 - **Separate elements** – G-meter as a separate element; route card (from → to, time left) as a separate element
 
 Every panel is always kept inside the game window. Settings are stored in

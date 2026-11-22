@@ -28,4 +28,4 @@ $env:PATH = (Split-Path -Parent $vswhere) + ';' + $env:PATH
 $cmd = 'call "{0}" >nul && cd /d "{1}" && {2} && {3}' -f $vcvars, $root, $rc, $compile
 & $env:ComSpec /d /s /c $cmd
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE" }
-Write-Host "Built HaulETA Simple v1.6: $output"
+Write-Host "Built HaulETA Simple v1.7: $output"

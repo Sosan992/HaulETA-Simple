@@ -27,7 +27,7 @@
 #include <common/scssdk_telemetry_common_configs.h>
 
 namespace {
-constexpr wchar_t kVersionTitle[] = L"HaulETA Simple 1.6";
+constexpr wchar_t kVersionTitle[] = L"HaulETA Simple 1.7";
 
 // ---------------------------------------------------------------------------
 // Panel layout (pixels). The panel is one layered window; everything is drawn
@@ -148,8 +148,9 @@ Palette g_pal = kDarkPalette;  // the theme in use
 constexpr int kPaperTextureId = 106;  // paper_788x104.bmp, light theme background
 
 // ---------------------------------------------------------------------------
-// User interface languages (Ctrl+F12 drop-down): Hungarian plus the five languages most used by
-// ETS2 players according to Steam review languages (English, Russian, Turkish, German, Polish).
+// User interface languages (Ctrl+F12 drop-down). English is the default for a new install; the list
+// holds the five languages most used by ETS2 players according to Steam review languages (English,
+// Russian, Turkish, German, Polish) plus Hungarian.
 // ---------------------------------------------------------------------------
 struct UiText {
     const wchar_t* languageName;   // shown in the language drop-down, in its own language
@@ -190,14 +191,6 @@ struct UiText {
 };
 
 constexpr UiText kTexts[] = {
-    {L"Magyar",
-        L"INDULÁS", L"BECSÜLT ÉRKEZÉS", L"Hátralévő idő: ", L"ÜZEMANYAG", L"FÁRADTSÁG", L"PIHENJ!", L"HELYI IDŐ",
-        L"G-ERŐ", L"MAX", L"km/h", L"Várakozás GPS-útvonalra",
-        L"Ctrl+F11 és Ctrl+F12 foglalt (másik program)", L"Ctrl+F11 foglalt (másik program)", L"Ctrl+F12 foglalt (másik program)",
-        L"HONNAN", L"HOVÁ", L"Nincs aktív fuvar", L"érkezés ", L"HÁTRALÉVŐ", L"ÓRA:PERC",
-        L"Ablak átlátszósága", L"Minden panel", L"Háttér", L"Nyelv", L"Sötét (karbon)", L"Világos",
-        L"Külön elemek", L"G-méter külön elemként", L"Útvonal külön: honnan → hová, hátralévő idő",
-        L"Áthelyezés: Ctrl+F11, majd húzd az egérrel", L"Beállítások"},
     {L"English",
         L"DEPARTURE", L"EST. ARRIVAL", L"Time left: ", L"FUEL", L"FATIGUE", L"REST!", L"LOCAL TIME",
         L"G-FORCE", L"MAX", L"km/h", L"Waiting for a GPS route",
@@ -206,6 +199,14 @@ constexpr UiText kTexts[] = {
         L"Window transparency", L"All panels", L"Background", L"Language", L"Dark (carbon)", L"Light",
         L"Separate elements", L"G-meter as a separate element", L"Route separate: from → to, time left",
         L"Move: Ctrl+F11, then drag with the mouse", L"Settings"},
+    {L"Magyar",
+        L"INDULÁS", L"BECSÜLT ÉRKEZÉS", L"Hátralévő idő: ", L"ÜZEMANYAG", L"FÁRADTSÁG", L"PIHENJ!", L"HELYI IDŐ",
+        L"G-ERŐ", L"MAX", L"km/h", L"Várakozás GPS-útvonalra",
+        L"Ctrl+F11 és Ctrl+F12 foglalt (másik program)", L"Ctrl+F11 foglalt (másik program)", L"Ctrl+F12 foglalt (másik program)",
+        L"HONNAN", L"HOVÁ", L"Nincs aktív fuvar", L"érkezés ", L"HÁTRALÉVŐ", L"ÓRA:PERC",
+        L"Ablak átlátszósága", L"Minden panel", L"Háttér", L"Nyelv", L"Sötét (karbon)", L"Világos",
+        L"Külön elemek", L"G-méter külön elemként", L"Útvonal külön: honnan → hová, hátralévő idő",
+        L"Áthelyezés: Ctrl+F11, majd húzd az egérrel", L"Beállítások"},
     {L"Русский",
         L"ВЫЕЗД", L"ОЖИД. ПРИБЫТИЕ", L"Осталось: ", L"ТОПЛИВО", L"УСТАЛОСТЬ", L"ОТДЫХ!", L"МЕСТНОЕ ВРЕМЯ",
         L"ПЕРЕГРУЗКА", L"МАКС", L"км/ч", L"Ожидание GPS-маршрута",
@@ -240,9 +241,9 @@ constexpr UiText kTexts[] = {
         L"Przenoszenie: Ctrl+F11, potem przeciągnij myszą", L"Ustawienia"},
 };
 constexpr int kLanguageCount = static_cast<int>(sizeof(kTexts) / sizeof(kTexts[0]));
-constexpr const wchar_t* kLanguageCodes[] = {L"hu", L"en", L"ru", L"tr", L"de", L"pl"};  // settings.ini values
+constexpr const wchar_t* kLanguageCodes[] = {L"en", L"hu", L"ru", L"tr", L"de", L"pl"};  // settings.ini values
 static_assert(sizeof(kLanguageCodes) / sizeof(kLanguageCodes[0]) == sizeof(kTexts) / sizeof(kTexts[0]), "one code per language");
-int g_language = 0;                    // index into kTexts (0 = Hungarian)
+int g_language = 0;                    // index into kTexts (0 = English, the default for a new install)
 const UiText* g_txt = &kTexts[0];
 constexpr Rgb kGood{88, 214, 140};
 constexpr Rgb kCaution{255, 184, 64};
@@ -418,7 +419,8 @@ void LoadSettings() {
     g_routeSeparate = GetPrivateProfileIntW(L"layout", L"route_separate", 0, file) != 0;
     g_pal = GetPrivateProfileIntW(L"appearance", L"theme", 0, file) == 1 ? kLightPalette : kDarkPalette;
     wchar_t code[16]{};
-    GetPrivateProfileStringW(L"appearance", L"language", L"hu", code, _countof(code), file);
+    // No language saved yet (first install) or an unknown code: English.
+    GetPrivateProfileStringW(L"appearance", L"language", L"en", code, _countof(code), file);
     g_language = 0;
     for (int i = 0; i < kLanguageCount; ++i)
         if (_wcsicmp(code, kLanguageCodes[i]) == 0) g_language = i;
