@@ -1,0 +1,7 @@
+build/
+installed/
+*.obj
+*.exp
+*.lib
+*.res
+

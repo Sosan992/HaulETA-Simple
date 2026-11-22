@@ -1,0 +1,8 @@
+// Textures of the panel, compiled into HaulETA.dll (IDs match kCarbonTextureId etc. in HaulETA.cpp).
+// The BMPs are produced from textures_src\ by Prepare-Textures.ps1 at their exact on-screen sizes.
+101 BITMAP "assets\carbon_788x104.bmp"
+102 BITMAP "assets\metal_76x64.bmp"
+103 BITMAP "assets\metal_120x42.bmp"
+104 BITMAP "assets\diffuser_816x132.bmp"
+105 BITMAP "assets\metal_62x62.bmp"
+106 BITMAP "assets\paper_788x104.bmp"
