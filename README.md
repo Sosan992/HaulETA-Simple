@@ -44,7 +44,7 @@ HaulETA Simple shows the information you need on the road in one compact, modern
    Create the `plugins` folder if it does not exist. For ATS use `American Truck Simulator\bin\win_x64\plugins\`.
 3. Start the game. When SDK plugins are installed, the game shows a notice about them at startup – confirm it with OK.
 
-Only the single DLL is needed: all textures are built into it. Keep only one HaulETA DLL in the folder.
+ !!!  Only the single DLL is needed: all textures are built into it. Keep only one HaulETA DLL in the folder. !!!
 
 ## Usage
 
