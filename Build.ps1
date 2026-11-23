@@ -22,10 +22,10 @@ foreach ($asset in 'carbon_788x104.bmp', 'metal_76x64.bmp', 'metal_120x42.bmp', 
 }
 # The textures in assets\ are compiled into the DLL as bitmap resources.
 $rc = 'rc.exe /nologo /fo "{0}" "{1}"' -f $resource, $resourceScript
-$compile = 'cl.exe /nologo /LD /EHsc /std:c++17 /utf-8 /O2 /DUNICODE /D_UNICODE /I "{0}" /Fo"{1}" "{2}" "{3}" user32.lib gdi32.lib comctl32.lib /link /OUT:"{4}" /IMPLIB:"{5}"' -f $include, $object, $source, $resource, $output, (Join-Path $outDir 'HaulETA.lib')
+$compile = 'cl.exe /nologo /LD /EHsc /std:c++17 /utf-8 /O2 /DUNICODE /D_UNICODE /I "{0}" /Fo"{1}" "{2}" "{3}" user32.lib gdi32.lib comctl32.lib uxtheme.lib shell32.lib ole32.lib /link /OUT:"{4}" /IMPLIB:"{5}"' -f $include, $object, $source, $resource, $output, (Join-Path $outDir 'HaulETA.lib')
 # vcvars64.bat looks for vswhere.exe on PATH, so put the installer folder there first.
 $env:PATH = (Split-Path -Parent $vswhere) + ';' + $env:PATH
 $cmd = 'call "{0}" >nul && cd /d "{1}" && {2} && {3}' -f $vcvars, $root, $rc, $compile
 & $env:ComSpec /d /s /c $cmd
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE" }
-Write-Host "Built HaulETA Simple v1.7: $output"
+Write-Host "Built HaulETA Simple v0.1.9: $output"

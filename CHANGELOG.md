@@ -1,5 +1,14 @@
 # HaulETA Simple changelog
 
+## 0.1.9
+
+- With the TM Real Walk plugin: every panel (main panel, detached G-meter and route card) hides automatically when the driver gets out of the truck and comes back when he sits in the truck again. HaulETA reads TM Real Walk's `[walker] enter/exit at world` lines from the game's log (game.log.txt) four times a second. Without TM Real Walk nothing changes. In moving mode (Ctrl+F11) the panels stay visible.
+
+## 0.1.8
+
+- Versions are numbered 0.x.y from now on (0.1.8 follows 1.7; the window titles show "HaulETA Simple 0.1.8").
+- Settings window (Ctrl+F12): the checkbox labels ("G-meter as a separate element", "Route separate") are now white and readable. Windows' visual styles drew them in a dark colour on the dark background; the checkboxes now draw without the visual style, so the plugin's white text colour applies.
+
 ## 1.7
 
 - English is now the default language: a new install (no language saved in settings.ini yet) starts in English, and English is the first entry of the language drop-down. A language chosen earlier in Ctrl+F12 is kept.

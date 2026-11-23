@@ -2,7 +2,7 @@
 
 **A lightweight telemetry overlay plugin for Euro Truck Simulator 2 and American Truck Simulator.**
 
-**Version 0.1.7** · see [CHANGELOG.md](CHANGELOG.md) (GitHub version 0.1.*x* = plugin build 1.*x*; the plugin shows "HaulETA Simple 1.7")
+**Version 0.1.9** · see [CHANGELOG.md](CHANGELOG.md) (from 0.1.8 on the plugin uses the same 0.x.y numbers; earlier builds were shown as 1.x, e.g. "HaulETA Simple 1.7" = 0.1.7)
 
 HaulETA Simple shows the information you need on the road in one compact, modern panel: when you will arrive, how far you have come, the speed limit, your fuel, when you need to rest, the local time and the G-forces your cargo (or your passengers) feel. It reacts to your headlights and indicators with a back-lit edge glow, comes with a dark and a light theme, lets you pull parts of the panel out as separate elements, and speaks six languages.
 
@@ -27,6 +27,7 @@ HaulETA Simple shows the information you need on the road in one compact, modern
 | **Themes** | *Dark (carbon)*: carbon fibre and brushed metal. *Light*: white paper card with soft shadow, violet accents and a black clock pill. |
 | **Detachable elements** | Show the G-meter and/or a route card (from → to, company names, time left) as separate panels anywhere on screen; the main panel gets shorter. |
 | **Languages** | English (default), Magyar, Русский, Türkçe, Deutsch, Polski. |
+| **TM Real Walk aware** | With the TM Real Walk plugin the panels hide while you walk outside the truck and come back when you sit in it again. |
 | **Smooth & light** | Anti-aliased drawing with per-pixel transparency, animations only while something changes. |
 
 ## Requirements

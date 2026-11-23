@@ -2,6 +2,8 @@
 #define NOMINMAX
 #include <windows.h>
 #include <commctrl.h>
+#include <uxtheme.h>
+#include <shlobj.h>
 
 #include <algorithm>
 #include <atomic>
@@ -27,7 +29,7 @@
 #include <common/scssdk_telemetry_common_configs.h>
 
 namespace {
-constexpr wchar_t kVersionTitle[] = L"HaulETA Simple 1.7";
+constexpr wchar_t kVersionTitle[] = L"HaulETA Simple 0.1.9";
 
 // ---------------------------------------------------------------------------
 // Panel layout (pixels). The panel is one layered window; everything is drawn
@@ -308,6 +310,7 @@ JobInfo ReadJob() {
 }
 std::atomic<bool> g_running{false};
 std::atomic<bool> g_driverActive{false};
+std::atomic<bool> g_onFoot{false};  // the driver walks outside the truck (TM Real Walk)
 std::atomic<double> g_initialDistance{0.0};
 std::atomic<double> g_previousDistance{0.0};
 std::atomic<long long> g_routeStartedMs{0};
@@ -2005,10 +2008,92 @@ void PlaceWindow(HWND window, const Surface& s, int x, int y, bool place, bool s
     if ((IsWindowVisible(window) != FALSE) != show) ShowWindow(window, show ? SW_SHOWNOACTIVATE : SW_HIDE);
 }
 
+// ---------------------------------------------------------------------------
+// In the truck or on foot: TM Real Walk writes "[walker] enter at world" to the game's log when the
+// driver gets out and "[walker] exit at world" when he is back in the seat. The new lines of
+// game.log.txt are read with every overlay refresh (four times a second); while the driver walks,
+// every panel is hidden. Without TM Real Walk the driver is always in the truck.
+// ---------------------------------------------------------------------------
+struct GameLogWatch {
+    std::wstring path;
+    HANDLE file = INVALID_HANDLE_VALUE;
+    LONGLONG offset = 0;
+    std::string partial;  // an unfinished last line
+} g_logWatch;
+
+std::wstring GameLogPath() {
+    wchar_t custom[MAX_PATH]{};
+    const DWORD n = GetEnvironmentVariableW(L"HAULETA_GAMELOG", custom, MAX_PATH);  // for tests
+    if (n && n < MAX_PATH) return custom;
+    PWSTR docs = nullptr;
+    std::wstring path;
+    // The plugin runs inside the game: amtrucks.exe keeps its log under "American Truck Simulator".
+    wchar_t exe[MAX_PATH]{};
+    GetModuleFileNameW(nullptr, exe, MAX_PATH);
+    const wchar_t* exeName = std::wcsrchr(exe, L'\\');
+    const bool ats = _wcsicmp(exeName ? exeName + 1 : exe, L"amtrucks.exe") == 0;
+    const wchar_t* folder = ats ? L"\\American Truck Simulator\\game.log.txt" : L"\\Euro Truck Simulator 2\\game.log.txt";
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &docs)) && docs) path = std::wstring(docs) + folder;
+    CoTaskMemFree(docs);
+    return path;
+}
+
+void ScanLogLine(const std::string& line) {
+    if (line.find("[TMRealWalk]") == std::string::npos) return;
+    if (line.find("[walker] enter at world") != std::string::npos) g_onFoot = true;
+    else if (line.find("[walker] exit at world") != std::string::npos) g_onFoot = false;
+}
+
+void PollGameLog() {
+    GameLogWatch& w = g_logWatch;
+    if (w.file == INVALID_HANDLE_VALUE) {
+        if (w.path.empty()) w.path = GameLogPath();
+        if (w.path.empty()) return;
+        w.file = CreateFileW(w.path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (w.file == INVALID_HANDLE_VALUE) return;
+        w.offset = 0;  // the log starts with the game, so reading it from the start gives the current state
+        w.partial.clear();
+    }
+    LARGE_INTEGER size{};
+    if (!GetFileSizeEx(w.file, &size)) return;
+    if (size.QuadPart < w.offset) {  // a new log
+        w.offset = 0;
+        w.partial.clear();
+        g_onFoot = false;
+    }
+    static std::vector<char> buffer(1 << 20);
+    while (w.offset < size.QuadPart) {
+        LARGE_INTEGER pos{};
+        pos.QuadPart = w.offset;
+        if (!SetFilePointerEx(w.file, pos, nullptr, FILE_BEGIN)) return;
+        DWORD read = 0;
+        const DWORD want = static_cast<DWORD>(std::min<LONGLONG>(static_cast<LONGLONG>(buffer.size()), size.QuadPart - w.offset));
+        if (!ReadFile(w.file, buffer.data(), want, &read, nullptr) || read == 0) return;
+        w.offset += read;
+        size_t start = 0;
+        for (size_t i = 0; i < read; ++i) {
+            if (buffer[i] != '\n') continue;
+            w.partial.append(buffer.data() + start, i - start);
+            ScanLogLine(w.partial);
+            w.partial.clear();
+            start = i + 1;
+        }
+        w.partial.append(buffer.data() + start, read - start);
+        if (w.partial.size() > 65536) w.partial.clear();  // not a log line
+    }
+}
+
+void CloseGameLog() {
+    if (g_logWatch.file != INVALID_HANDLE_VALUE) CloseHandle(g_logWatch.file);
+    g_logWatch = GameLogWatch{};
+}
+
 void RefreshOverlayState(bool force = false) {
     const long long now = SteadyMillis();
     if (!force && now - g_lastWindowRefreshMs < 250) return;
     g_lastWindowRefreshMs = now;
+    PollGameLog();
     g_gameWindow = FindGameWindow();
     HWND window = g_window.load();
     if (!window) return;
@@ -2026,7 +2111,8 @@ void RefreshOverlayState(bool force = false) {
     const int clientWidth = static_cast<int>(gameClient.right - gameClient.left);
     const int clientHeight = static_cast<int>(gameClient.bottom - gameClient.top);
 
-    const bool show = g_driverActive.load() && !(g_gameWindow && IsIconic(g_gameWindow));
+    // Only while the driver sits in the truck (in moving mode the panels stay, so they can be placed).
+    const bool show = g_driverActive.load() && (!g_onFoot.load() || g_dragMode) && !(g_gameWindow && IsIconic(g_gameWindow));
     // Positions are kept inside the game window; the saved positions themselves are not changed.
     const bool place = show && !g_dragMode && hasClient;
     int mainX = g_position.saved ? g_position.x : left + static_cast<int>(clientWidth * 0.3125f);
@@ -2139,6 +2225,9 @@ HWND CreateCheckbox(HWND parent, int id, const wchar_t* text, int y, bool checke
     HWND box = CreateWindowExW(0, L"BUTTON", text, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
         16, y, kOpacityMenuWidth - 32, 26, parent, reinterpret_cast<HMENU>(static_cast<intptr_t>(id)), g_module, nullptr);
     if (box) {
+        // A themed checkbox ignores the WM_CTLCOLORBTN text colour (dark label on the dark menu);
+        // without the theme it draws the label in our colour.
+        SetWindowTheme(box, L"", L"");
         SendMessageW(box, WM_SETFONT, reinterpret_cast<WPARAM>(g_fonts.menuLabel), TRUE);
         SendMessageW(box, BM_SETCHECK, checked ? BST_CHECKED : BST_UNCHECKED, 0);
     }
@@ -2178,9 +2267,9 @@ LRESULT CALLBACK OpacityMenuProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         return 1;
     case WM_CTLCOLORSTATIC:
     case WM_CTLCOLORBTN: {
-        // Dark background and light text for the checkboxes and the slider.
+        // Dark background and white text for the checkboxes and the slider.
         HDC dc = reinterpret_cast<HDC>(wParam);
-        SetTextColor(dc, Ref(kDarkPalette.textValue));
+        SetTextColor(dc, RGB(255, 255, 255));
         SetBkColor(dc, kMenuBackground);
         return reinterpret_cast<LRESULT>(g_menuBrush ? g_menuBrush : GetStockObject(BLACK_BRUSH));
     }
@@ -2445,6 +2534,7 @@ void WindowMain() {
     if (g_menuBrush) DeleteObject(g_menuBrush);
     g_menuBrush = nullptr;
     DestroyCanvas();
+    CloseGameLog();
     DestroyFonts();
     g_panelBase.clear();
     g_routeBase.clear();
@@ -2559,6 +2649,7 @@ extern "C" __declspec(dllexport) SCSAPI_VOID scs_telemetry_shutdown(void) {
     g_fuelCapacityLiters = 0.0f;
     g_hasGameTime = false;
     g_driverActive = false;
+    g_onFoot = false;
     g_tripStarted = false;
     g_tripCompleted = false;
     g_hotkeyFailures = 0;
